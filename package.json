@@ -1,0 +1,18 @@
+{
+  "name": "raja-rani-game",
+  "version": "1.0.0",
+  "description": "Raja Rani - Real-Time Royal Multiplayer Card Game",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "start": "node backend/src/server.js",
+    "render:build": "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend run build",
+    "test": "node backend/test/gameEngine.test.js",
+    "dev:backend": "node backend/src/server.js",
+    "dev:frontend": "npm --prefix frontend run dev"
+  },
+  "keywords": ["raja-rani", "multiplayer", "socket.io", "react", "game"],
+  "author": "",
+  "license": "MIT"
+}
