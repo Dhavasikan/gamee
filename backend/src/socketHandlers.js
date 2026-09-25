@@ -28,7 +28,9 @@ function setupSocketHandlers(io, roomManager) {
           connected: p.connected,
           score: gameP ? gameP.score : p.score,
           isRevealed: gameP ? gameP.isRevealed : false,
-          revealedRole: gameP?.isRevealed ? gameP.revealedRole : null
+          revealedRole: gameP?.isRevealed ? gameP.revealedRole : null,
+          completed: gameP ? !!gameP.completed : !!p.completed,
+          finalRole: gameP ? !!gameP.finalRole : !!p.finalRole
         };
       }),
       gameState: publicState,
@@ -47,6 +49,54 @@ function setupSocketHandlers(io, roomManager) {
 
     // Trigger Bot turn if the active player is a bot
     handleBotTurns(room);
+  }
+
+  /**
+   * Dispatches prediction result:
+   * - Generic event to all room members
+   * - Private swap details strictly to the two affected players
+   */
+  function dispatchPredictionResult(room, res) {
+    if (!room || !res) return;
+
+    if (!res.isCorrect) {
+      // 1. Public room broadcast: Generic message only, ZERO role leakage
+      io.to(room.code).emit('game:prediction_result', {
+        success: true,
+        isCorrect: false,
+        event: {
+          timestamp: res.event?.timestamp || Date.now(),
+          type: 'PREDICTION_WRONG',
+          oldActivePlayerId: res.event?.oldActivePlayerId,
+          oldActivePlayerName: res.event?.oldActivePlayerName,
+          targetPlayerId: res.event?.targetPlayerId,
+          targetPlayerName: res.event?.targetPlayerName,
+          message: '🔄 Card Swapping...'
+        }
+      });
+
+      // 2. Private direct socket events to the two players involved in the swap
+      if (res.swapDetails) {
+        const guesserPlayer = room.players.find(p => p.id === res.swapDetails.guesser.playerId);
+        const targetPlayer = room.players.find(p => p.id === res.swapDetails.target.playerId);
+
+        if (guesserPlayer && !guesserPlayer.isBot && guesserPlayer.socketId) {
+          io.to(guesserPlayer.socketId).emit('player:swap_private', res.swapDetails.guesser);
+        }
+        if (targetPlayer && !targetPlayer.isBot && targetPlayer.socketId) {
+          io.to(targetPlayer.socketId).emit('player:swap_private', res.swapDetails.target);
+        }
+      }
+    } else {
+      // Correct guess: Broadcast victory and role unlock
+      io.to(room.code).emit('game:prediction_result', {
+        success: true,
+        isCorrect: true,
+        event: res.event
+      });
+    }
+
+    broadcastFullRoomState(room);
   }
 
   /**
@@ -83,9 +133,9 @@ function setupSocketHandlers(io, roomManager) {
         if (!room.gameState || room.gameState.status !== 'PLAYING') return;
         if (room.gameState.activePlayerId !== activePlayerId) return;
 
-        // Pick a valid candidate (not self, and preferably not already revealed as someone else)
+        // Rule 2: Exclude self and completed players
         const candidates = room.gameState.players.filter(
-          p => p.id !== activePlayerId && (!p.isRevealed || p.character === room.gameState.targetRole)
+          p => p.id !== activePlayerId && !p.completed
         );
 
         if (candidates.length === 0) return;
@@ -93,8 +143,7 @@ function setupSocketHandlers(io, roomManager) {
 
         const result = roomManager.makePrediction(room.code, activePlayerId, target.id);
         if (result.success) {
-          io.to(room.code).emit('game:prediction_result', result);
-          broadcastFullRoomState(room);
+          dispatchPredictionResult(room, result);
         }
       }, 2200);
     }
@@ -172,12 +221,14 @@ function setupSocketHandlers(io, roomManager) {
       if (!res.success) {
         return callback?.(res);
       }
-      callback?.(res);
+      callback?.({
+        success: true,
+        isCorrect: res.isCorrect,
+        event: res.isCorrect ? res.event : null,
+        swapDetails: res.swapDetails?.guesser
+      });
       const room = roomManager.getRoom(roomCode);
-
-      // Emit prediction result for celebration or swap animation
-      io.to(roomCode).emit('game:prediction_result', res);
-      broadcastFullRoomState(room);
+      dispatchPredictionResult(room, res);
     });
 
     // 8. Rematch

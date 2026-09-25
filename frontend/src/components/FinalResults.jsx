@@ -119,17 +119,39 @@ export default function FinalResults({
                   {getRankBadge(idx)}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 'bold', color: p.id === currentPlayer?.id ? 'var(--gold-primary)' : 'white' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: p.id === currentPlayer?.id ? 'var(--gold-primary)' : 'white' }}>
                     {p.name} {p.id === currentPlayer?.id && <span style={{ fontSize: '0.75rem', color: 'var(--gold-light)' }}>(You)</span>}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    End Role: {p.character?.toUpperCase() || 'Secret'}
                   </div>
                 </div>
               </div>
 
-              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--gold-light)' }}>
-                {p.score || 0} pts
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--gold-light)' }}>
+                  {p.score || 0} Points
+                </div>
+
+                <span style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '999px',
+                  fontSize: '0.82rem',
+                  fontWeight: 'bold',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: p.completed
+                    ? 'rgba(16, 185, 129, 0.2)'
+                    : p.finalRole
+                    ? 'rgba(239, 68, 68, 0.2)'
+                    : 'rgba(255, 255, 255, 0.08)',
+                  border: p.completed
+                    ? '1.5px solid #10b981'
+                    : p.finalRole
+                    ? '1.5px solid #ef4444'
+                    : '1px solid rgba(255, 255, 255, 0.2)',
+                  color: p.completed ? '#6ee7b7' : p.finalRole ? '#fca5a5' : '#cbd5e1'
+                }}>
+                  {p.completed ? '✅ Completed' : p.finalRole ? '🏁 Final Role' : '✅ Completed'}
+                </span>
               </div>
             </div>
           ))}

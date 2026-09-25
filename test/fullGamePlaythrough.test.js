@@ -48,11 +48,19 @@ async function runFullPlaythrough() {
 
   // 4. Setup listeners for secret roles and public room states
   const secretRoles = {};
+  const privateSwaps = {};
+  let lastPredictionResultEvent = null;
   let currentRoomState = null;
 
   sockets.forEach((s, idx) => {
     s.on('player:secret', (sec) => {
       secretRoles[playersData[idx].id] = sec;
+    });
+    s.on('player:swap_private', (swap) => {
+      privateSwaps[playersData[idx].id] = swap;
+    });
+    s.on('game:prediction_result', (res) => {
+      lastPredictionResultEvent = res;
     });
     s.on('room:state', (st) => {
       currentRoomState = st;
@@ -122,7 +130,30 @@ async function runFullPlaythrough() {
   assert.strictEqual(currentRoomState.gameState.targetRole, 'rani', 'Target role must remain Rani!');
   console.log(`✓ Character Swap Verified: ${playersData[wrongCandidateIdx].name} is now Raja and active turn holder!`);
 
+  // Verify Privacy of Card Swap (Rule 1 & Rule 6)
+  assert.strictEqual(lastPredictionResultEvent?.event?.message, '🔄 Card Swapping...', 'Public event message must be generic');
+  assert.strictEqual(lastPredictionResultEvent?.event?.currentRole, undefined, 'Public event must NOT leak current role');
+  assert.strictEqual(lastPredictionResultEvent?.event?.targetPlayerOldRole, undefined, 'Public event must NOT leak target player old role');
+
+  // Verify private swap delivered strictly to the two affected players
+  assert.ok(privateSwaps[activeId], 'Guesser must receive private swap event');
+  assert.strictEqual(privateSwaps[activeId].isGuesser, true);
+  assert.strictEqual(privateSwaps[activeId].title, '❌ Wrong Guess');
+
+  assert.ok(privateSwaps[wrongCandidateId], 'Target player must receive private swap event');
+  assert.strictEqual(privateSwaps[wrongCandidateId].isGuesser, false);
+  assert.strictEqual(privateSwaps[wrongCandidateId].title, '🔄 Your card has been swapped');
+
+  // Verify other 4 players did NOT receive private swap info
+  playersData.forEach(p => {
+    if (p.id !== activeId && p.id !== wrongCandidateId) {
+      assert.strictEqual(privateSwaps[p.id], undefined, `Spectator ${p.name} must NOT receive private swap details!`);
+    }
+  });
+  console.log('✓ Secrecy Verified: Only guesser & target received private roles; public message is generic "🔄 Card Swapping..."');
+
   // 8. Now new Raja guesses the correct Rani
+  const guesserPlayerId = currentRoomState.gameState.activePlayerId;
   activeId = currentRoomState.gameState.activePlayerId;
   activeIdx = playersData.findIndex(p => p.id === activeId);
 
@@ -149,6 +180,26 @@ async function runFullPlaythrough() {
   assert.strictEqual(currentRoomState.gameState.currentRole, 'rani');
   assert.strictEqual(currentRoomState.gameState.targetRole, 'manthiri');
   console.log('✓ Progression verified: Turn advanced to Rani searching for Manthiri!');
+
+  // Verify Rule 2 & 7: Winner player is locked / completed and CANNOT be selected again
+  const completedWinner = currentRoomState.players.find(p => p.id === guesserPlayerId);
+  assert.strictEqual(completedWinner.completed, true, 'Winner must be marked completed 🔒');
+  console.log(`✓ Completed Player Verified: ${completedWinner.name} is marked as COMPLETED 🔒`);
+
+  // Attempt to select the completed winner -> Backend MUST reject
+  const raniIdx = playersData.findIndex(p => p.id === raniPlayerId);
+  await new Promise((resolve, reject) => {
+    sockets[raniIdx].emit('game:predict', {
+      roomCode,
+      guessingPlayerId: raniPlayerId,
+      targetPlayerId: guesserPlayerId
+    }, (res) => {
+      assert.strictEqual(res.success, false, 'Selecting completed winner must fail');
+      assert.ok(res.error.includes('completed'), `Error should mention completed player: ${res.error}`);
+      console.log(`✓ Backend Security Verified: Selection of completed player (${completedWinner.name}) rejected!`);
+      resolve();
+    });
+  });
 
   // Clean up
   sockets.forEach(s => s.disconnect());

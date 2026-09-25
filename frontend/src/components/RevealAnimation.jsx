@@ -83,7 +83,7 @@ export default function RevealAnimation({ event, onComplete }) {
             padding: '0.6rem 1.5rem',
             borderRadius: '999px',
             display: 'inline-block',
-            margin: '1rem 0',
+            margin: '0.75rem 0',
             boxShadow: '0 0 25px rgba(255, 215, 0, 0.6)'
           }}>
             +{pointsAwarded} Points to {predictorName}!
@@ -97,11 +97,28 @@ export default function RevealAnimation({ event, onComplete }) {
             padding: '0.5rem 1.25rem',
             borderRadius: '999px',
             display: 'inline-block',
-            margin: '1rem 0'
+            margin: '0.75rem 0'
           }}>
             Thirudan yields 0 Points
           </div>
         )}
+
+        {/* Completed status indicator */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.2)',
+          border: '1.5px solid #10b981',
+          borderRadius: '0.75rem',
+          padding: '0.5rem 1rem',
+          color: '#6ee7b7',
+          fontWeight: 'bold',
+          fontSize: '0.95rem',
+          marginBottom: '0.75rem',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem'
+        }}>
+          <span>🏆 {predictorName} has COMPLETED 🔒 (Cannot be selected again)</span>
+        </div>
 
         <div style={{
           background: 'rgba(26, 17, 49, 0.85)',

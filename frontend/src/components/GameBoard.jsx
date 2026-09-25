@@ -51,6 +51,7 @@ export default function GameBoard({
   const handleSelectPlayer = (player) => {
     if (!isMyTurn) return;
     if (player.id === currentPlayer?.id) return;
+    if (player.completed) return; // Requirement 2: Completed player cannot be selected again
     if (player.isRevealed && player.revealedRole !== targetRole) {
       // Player already revealed as something else
       return;
@@ -326,21 +327,25 @@ export default function GameBoard({
           {players.map(p => {
             const isMe = p.id === currentPlayer?.id;
             const isTurnHolder = p.id === activePlayerId;
-            const canSelect = isMyTurn && !isMe && rajaRevealed && (!p.isRevealed || p.revealedRole === targetRole);
+            const isCompleted = !!p.completed;
+            const canSelect = isMyTurn && !isMe && !isCompleted && rajaRevealed && (!p.isRevealed || p.revealedRole === targetRole);
             const revealedRoleInfo = p.isRevealed ? ROLES_INFO[p.revealedRole] : null;
 
             return (
               <div
                 key={p.id}
                 onClick={() => canSelect && handleSelectPlayer(p)}
-                className={`player-card ${isTurnHolder ? 'active-turn' : ''} ${!canSelect && isMyTurn ? 'disabled' : ''}`}
+                className={`player-card ${isTurnHolder ? 'active-turn' : ''} ${isCompleted ? 'completed-locked' : ''} ${!canSelect && isMyTurn ? 'disabled' : ''}`}
                 style={{
-                  cursor: canSelect ? 'pointer' : 'default',
+                  cursor: canSelect ? 'pointer' : isCompleted ? 'not-allowed' : 'default',
                   border: isTurnHolder
                     ? '2px solid var(--gold-primary)'
+                    : isCompleted
+                    ? '1.5px solid rgba(16, 185, 129, 0.6)'
                     : p.isRevealed
                     ? '1.5px solid rgba(16, 185, 129, 0.4)'
-                    : '1.5px solid rgba(255, 215, 0, 0.2)'
+                    : '1.5px solid rgba(255, 215, 0, 0.2)',
+                  opacity: isCompleted && !isTurnHolder ? 0.85 : 1
                 }}
               >
                 {/* Active Turn Crown Badge */}
@@ -366,17 +371,31 @@ export default function GameBoard({
                   width: '56px',
                   height: '56px',
                   borderRadius: '50%',
-                  background: p.isRevealed
+                  background: isCompleted
+                    ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.35) 100%)'
+                    : p.isRevealed
                     ? 'linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(89,36,150,0.4) 100%)'
                     : 'rgba(255, 255, 255, 0.06)',
-                  border: p.isRevealed ? '2px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.15)',
+                  border: isCompleted
+                    ? '2px solid #10b981'
+                    : p.isRevealed
+                    ? '2px solid var(--gold-primary)'
+                    : '1px solid rgba(255,255,255,0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: p.isRevealed ? '2rem' : '1.5rem',
-                  filter: p.isRevealed ? 'drop-shadow(0 0 8px rgba(255,215,0,0.4))' : 'none'
+                  fontSize: isCompleted ? '2rem' : p.isRevealed ? '2rem' : '1.5rem',
+                  filter: isCompleted
+                    ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.4))'
+                    : p.isRevealed
+                    ? 'drop-shadow(0 0 8px rgba(255,215,0,0.4))'
+                    : 'none'
                 }}>
-                  {p.isRevealed && revealedRoleInfo
+                  {isCompleted && p.revealedRole && revealedRoleInfo
+                    ? revealedRoleInfo.emoji
+                    : isCompleted
+                    ? '🛡️'
+                    : p.isRevealed && revealedRoleInfo
                     ? revealedRoleInfo.emoji
                     : isMe
                     ? secretRole?.roleDetails?.emoji || '👤'
@@ -393,25 +412,44 @@ export default function GameBoard({
                   </div>
                 </div>
 
-                {/* Revealed Status vs Hidden Lock */}
-                <div style={{
-                  fontSize: '0.78rem',
-                  padding: '0.25rem 0.65rem',
-                  borderRadius: '999px',
-                  background: p.isRevealed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                  color: p.isRevealed ? '#6ee7b7' : 'var(--text-muted)',
-                  border: p.isRevealed ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-                  marginTop: '0.2rem'
-                }}>
-                  {p.isRevealed && revealedRoleInfo
-                    ? `${revealedRoleInfo.emoji} ${revealedRoleInfo.name}`
-                    : isMe
-                    ? `Your Card: ${secretRole?.roleDetails?.name || 'Secret'}`
-                    : 'Character Hidden 🔒'}
-                </div>
+                {/* Status: Completed vs Revealed vs Hidden */}
+                {isCompleted ? (
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.18)',
+                    border: '1.5px solid #10b981',
+                    borderRadius: '0.65rem',
+                    padding: '0.4rem 0.65rem',
+                    marginTop: '0.35rem',
+                    textAlign: 'center',
+                    width: '100%'
+                  }}>
+                    <div style={{ color: '#6ee7b7', fontWeight: 'bold', fontSize: '0.82rem' }}>
+                      🏆 Completed
+                    </div>
+                    <div style={{ color: '#a7f3d0', fontSize: '0.72rem', marginTop: '0.1rem' }}>
+                      🔒 Cannot be selected again
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: '0.78rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '999px',
+                    background: p.isRevealed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                    color: p.isRevealed ? '#6ee7b7' : 'var(--text-muted)',
+                    border: p.isRevealed ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                    marginTop: '0.2rem'
+                  }}>
+                    {p.isRevealed && revealedRoleInfo
+                      ? `${revealedRoleInfo.emoji} ${revealedRoleInfo.name}`
+                      : isMe
+                      ? `Your Card: ${secretRole?.roleDetails?.name || 'Secret'}`
+                      : 'Character Hidden 🔒'}
+                  </div>
+                )}
 
-                {/* Guess Button if active player and candidate */}
-                {canSelect && (
+                {/* Guess Button if active player and candidate (Disabled for completed players) */}
+                {canSelect && !isCompleted && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

@@ -207,10 +207,14 @@ class RoomManager {
     const res = this.engine.makePrediction(room.gameState, guessingPlayerId, targetPlayerId);
 
     if (res.success && room.gameState.status === 'ROUND_END') {
-      // Sync scores back to room players
+      // Sync scores and status back to room players
       room.gameState.players.forEach(gp => {
         const rp = room.players.find(p => p.id === gp.id);
-        if (rp) rp.score = gp.score;
+        if (rp) {
+          rp.score = gp.score;
+          rp.completed = gp.completed;
+          rp.finalRole = gp.finalRole;
+        }
       });
 
       // Save to database
@@ -244,6 +248,10 @@ class RoomManager {
     if (resetScores) {
       room.players.forEach(p => p.score = 0);
     }
+    room.players.forEach(p => {
+      p.completed = false;
+      p.finalRole = false;
+    });
 
     room.gameState = this.engine.initializeRound(room.players);
     room.status = 'PLAYING';

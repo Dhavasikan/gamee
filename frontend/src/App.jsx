@@ -22,6 +22,7 @@ export default function App() {
   const [secretRole, setSecretRole] = useState(null);
   const [disconnectedPlayer, setDisconnectedPlayer] = useState(null);
   const [activeAnimation, setActiveAnimation] = useState(null);
+  const [privateSwapInfo, setPrivateSwapInfo] = useState(null);
   const [showFinalResults, setShowFinalResults] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,6 +60,11 @@ export default function App() {
     // Private character allocation / swap update
     s.on('player:secret', (privateInfo) => {
       setSecretRole(privateInfo);
+    });
+
+    // Private swap event strictly for the 2 involved players
+    s.on('player:swap_private', (swapData) => {
+      setPrivateSwapInfo(swapData);
     });
 
     // Real-time animation trigger on prediction result
@@ -182,6 +188,9 @@ export default function App() {
       },
       (res) => {
         setLoading(false);
+        if (res?.swapDetails) {
+          setPrivateSwapInfo(res.swapDetails);
+        }
         if (!res?.success) {
           setError(res?.error || 'Prediction failed');
         }
@@ -213,6 +222,7 @@ export default function App() {
     setRoom(null);
     setCurrentPlayer(null);
     setSecretRole(null);
+    setPrivateSwapInfo(null);
     setActiveAnimation(null);
     setShowFinalResults(false);
     setError('');
@@ -223,6 +233,7 @@ export default function App() {
   const handleAnimationComplete = () => {
     const wasRoundEnd = activeAnimation?.isRoundFinished || activeAnimation?.targetRole === 'thirudan';
     setActiveAnimation(null);
+    setPrivateSwapInfo(null);
     if (wasRoundEnd || room?.status === 'ROUND_END') {
       setShowFinalResults(true);
     }
@@ -312,6 +323,8 @@ export default function App() {
       {activeAnimation?.type === 'PREDICTION_WRONG' && (
         <SwapAnimation
           event={activeAnimation}
+          privateSwapInfo={privateSwapInfo}
+          currentPlayer={currentPlayer}
           onComplete={handleAnimationComplete}
         />
       )}
