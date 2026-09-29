@@ -1,4 +1,7 @@
-const { io } = require('socket.io-client');
+const io = (() => {
+  try { return require('socket.io-client').io; }
+  catch { return require('../frontend/node_modules/socket.io-client').io; }
+})();
 const assert = require('assert');
 
 console.log('=== RUNNING MULTIPLAYER REAL-TIME SOCKET.IO INTEGRATION TEST ===');
@@ -51,16 +54,19 @@ async function runTest() {
       console.log('✓ Game started and cards distributed');
     });
 
-    const [gameState, hostSecret] = await Promise.all([roomStatePromise, secretRolePromise]);
+    const [roomState, hostSecret] = await Promise.all([roomStatePromise, secretRolePromise]);
     console.log(`✓ Host received secret card privately: ${hostSecret.character.toUpperCase()} (Others see locked)`);
-    assert.strictEqual(gameState.players.length, 6);
+    assert.strictEqual(roomState.players.length, 6);
+
+    // Verify absolutely NO game history in public room state (Anti-cheating)
+    assert.strictEqual(roomState.gameState.history, undefined, 'Public gameState must NOT contain history or logs');
 
     // Anti-cheating check: check that other players' characters are hidden in public state
-    const otherPlayers = gameState.players.filter(p => p.id !== hostPlayer.id);
+    const otherPlayers = roomState.players.filter(p => p.id !== hostPlayer.id);
     otherPlayers.forEach(p => {
       assert.strictEqual(p.revealedRole, null, `Player ${p.name}'s secret card must not be leaked publicly!`);
     });
-    console.log('✓ Anti-cheating verified: No secret characters leaked in public socket payload!');
+    console.log('✓ Anti-cheating verified: No secret characters or history leaked in public socket payload!');
 
     // Clean up
     hostSocket.disconnect();

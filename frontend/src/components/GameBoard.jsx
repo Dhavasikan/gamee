@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { sound } from '../audio/soundEffects';
 import PredictionModal from './PredictionModal';
 import SecretCardModal from './SecretCardModal';
-import GameHistory from './GameHistory';
 
 const ROLES_INFO = {
   raja: { name: 'Raja', emoji: '👑', points: 100 },
@@ -36,8 +35,7 @@ export default function GameBoard({
     targetRole,
     activePlayerId,
     rajaRevealed,
-    players,
-    history
+    players
   } = gameState;
 
   const isMyTurn = activePlayerId === currentPlayer?.id;
@@ -466,9 +464,6 @@ export default function GameBoard({
           })}
         </div>
       </div>
-
-      {/* Real-time Game Chronicle Log */}
-      <GameHistory history={history} />
 
       {/* Prediction Confirmation Modal */}
       <PredictionModal

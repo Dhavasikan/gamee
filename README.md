@@ -39,12 +39,12 @@ Unlike ordinary guessing games, **Raja Rani** features an authentic role-exchang
 ## 🏰 Features & Highlights
 
 - **Real-Time Multiplayer Room System:** Unique chamber codes (e.g. `RR-7K29`), copy-to-clipboard, host management, and live lobby court.
-- **Strict Anti-Cheating Architecture:** Secret roles are never leaked in public socket payloads. Each client's secret card is delivered strictly to their individual socket connection.
+- **Strict Anti-Cheating & Zero-Log Architecture:** Hidden characters and role changes are never leaked in public socket payloads or logs. Secret roles remain strictly private.
 - **Solo & Quick-Test Bot Support:** Host can click **"🤖 Fill with Royal Bots"** in the lobby to immediately fill empty court slots with intelligent Royal AI guards.
 - **Immersive Royal Indian Aesthetics:** Dark velvet palette, ornate borders, 3D flip card animations, gold foil buttons, and victory confetti.
 - **Zero-Dependency Sound Synthesizer:** Built with native Web Audio API (fanfares, chimes, error gongs, and card flips) with instant response and no external asset loading failures.
 - **Role Swap & Reveal Animations:** Visual animation displaying the card exchange when a guess fails, and celebration banners when a character is found.
-- **Chamber History & Scoreboard:** Real-time log chronicle and podium rankings (🥇, 🥈, 🥉).
+- **Chamber Podium & Scoreboard:** Real-time court rankings (🥇, 🥈, 🥉) and match statistics.
 - **SQLite Database Persistence:** Match histories and player scores automatically logged to `database/rajarani.sqlite`.
 - **Tournament / Rematch Options:** Play again keeping cumulative tournament points or start fresh.
 
@@ -126,7 +126,6 @@ c:\Users\jdhav\QK\
 │   │   │   ├── PredictionModal.jsx# Confirmation dialog for role guessing
 │   │   │   ├── SwapAnimation.jsx # Role transfer exchange animation
 │   │   │   ├── RevealAnimation.jsx# Celebration fanfare & point banner
-│   │   │   ├── GameHistory.jsx   # Live chronicle timeline
 │   │   │   ├── FinalResults.jsx  # Game over podium & rematch controls
 │   │   │   └── HowToPlayModal.jsx# Rules guide
 │   │   ├── audio/

@@ -1,4 +1,7 @@
-const { io } = require('socket.io-client');
+const io = (() => {
+  try { return require('socket.io-client').io; }
+  catch { return require('../frontend/node_modules/socket.io-client').io; }
+})();
 const assert = require('assert');
 
 const SERVER_URL = 'http://localhost:5000';
@@ -134,15 +137,18 @@ async function runFullPlaythrough() {
   assert.strictEqual(lastPredictionResultEvent?.event?.message, '🔄 Card Swapping...', 'Public event message must be generic');
   assert.strictEqual(lastPredictionResultEvent?.event?.currentRole, undefined, 'Public event must NOT leak current role');
   assert.strictEqual(lastPredictionResultEvent?.event?.targetPlayerOldRole, undefined, 'Public event must NOT leak target player old role');
+  assert.strictEqual(lastPredictionResultEvent?.event?.oldActivePlayerName, undefined, 'Public event must NOT leak who guessed');
+  assert.strictEqual(lastPredictionResultEvent?.event?.targetPlayerName, undefined, 'Public event must NOT leak who was guessed');
+  assert.strictEqual(currentRoomState.gameState.history, undefined, 'Public state must NOT contain history or logs');
 
   // Verify private swap delivered strictly to the two affected players
   assert.ok(privateSwaps[activeId], 'Guesser must receive private swap event');
   assert.strictEqual(privateSwaps[activeId].isGuesser, true);
-  assert.strictEqual(privateSwaps[activeId].title, '❌ Wrong Guess');
+  assert.strictEqual(privateSwaps[activeId].title, '🔄 Card Swapped');
 
   assert.ok(privateSwaps[wrongCandidateId], 'Target player must receive private swap event');
   assert.strictEqual(privateSwaps[wrongCandidateId].isGuesser, false);
-  assert.strictEqual(privateSwaps[wrongCandidateId].title, '🔄 Your card has been swapped');
+  assert.strictEqual(privateSwaps[wrongCandidateId].title, '🔄 Card Swapped');
 
   // Verify other 4 players did NOT receive private swap info
   playersData.forEach(p => {
@@ -167,13 +173,16 @@ async function runFullPlaythrough() {
     }, (res) => {
       if (!res.success) return reject(new Error(res.error));
       assert.strictEqual(res.isCorrect, true, 'Prediction should be correct');
-      assert.strictEqual(res.event.pointsAwarded, 80, 'Must award 80 points for finding Rani');
-      console.log(`✓ Confirmed CORRECT prediction! Awarded +80 points to ${playersData[activeIdx].name}`);
+      assert.strictEqual(res.event.message, '✅ Correct Guess!', 'Event must strictly be minimal ✅ Correct Guess!');
+      console.log(`✓ Confirmed CORRECT prediction! (Zero role or score leakage in public event)`);
       resolve();
     });
   });
 
   await sleep(600);
+
+  // Verify points were awarded to the completed winner in room state
+  assert.strictEqual(currentRoomState.players.find(p => p.id === guesserPlayerId).score, 80, 'Winner awarded 80 points in room state');
 
   // Verify turn advanced to Rani seeking Manthiri
   assert.strictEqual(currentRoomState.gameState.activePlayerId, raniPlayerId, 'Rani player must become active turn holder');

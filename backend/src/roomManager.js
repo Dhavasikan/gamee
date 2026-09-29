@@ -226,7 +226,7 @@ class RoomManager {
         winnerName: rankings[0]?.name || 'None',
         winnerScore: rankings[0]?.score || 0,
         stats: room.gameState.stats,
-        history: room.gameState.history
+        history: []
       });
     }
 

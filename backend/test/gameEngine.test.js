@@ -64,12 +64,12 @@ assert.ok(guess1.event.message.includes('Card Swapping'), 'Public message must b
 
 // 3. Private swap details must be provided for the two affected players
 assert.strictEqual(guess1.swapDetails.guesser.playerId, 'pA');
-assert.strictEqual(guess1.swapDetails.guesser.title, '❌ Wrong Guess');
+assert.strictEqual(guess1.swapDetails.guesser.title, '🔄 Card Swapped');
 assert.strictEqual(guess1.swapDetails.guesser.roleId, 'manthiri');
 assert.ok(guess1.swapDetails.guesser.roleDisplay.includes('Manthiri'));
 
 assert.strictEqual(guess1.swapDetails.target.playerId, 'pC');
-assert.strictEqual(guess1.swapDetails.target.title, '🔄 Your card has been swapped');
+assert.strictEqual(guess1.swapDetails.target.title, '🔄 Card Swapped');
 assert.strictEqual(guess1.swapDetails.target.roleId, 'raja');
 assert.ok(guess1.swapDetails.target.roleDisplay.includes('Raja'));
 console.log('✓ RULE 1 verified: Swap occurred, public event has NO roles, private swapDetails given to Arun and Karthik');
@@ -186,10 +186,12 @@ assert.strictEqual(rankings[5].finalRole, true);
 
 // Check public state anti-cheating
 const publicState = engine.getPublicState(state);
+assert.strictEqual(publicState.history, undefined, 'Public state must NEVER contain history');
+assert.strictEqual(publicState.lastAction, undefined, 'Public state must NEVER contain lastAction');
 publicState.players.forEach(p => {
   assert.strictEqual(p.character, undefined, 'Public state players must NEVER contain secret character');
   assert.strictEqual(typeof p.completed, 'boolean', 'Public state must have completed flag');
 });
-console.log('✓ Public state anti-cheating validated: No characters exposed');
+console.log('✓ Public state anti-cheating validated: No characters or history exposed');
 
 console.log('\n--- ALL GAME ENGINE TESTS PASSED WITH 100% SUCCESS! ---');

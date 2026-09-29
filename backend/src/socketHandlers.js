@@ -60,17 +60,13 @@ function setupSocketHandlers(io, roomManager) {
     if (!room || !res) return;
 
     if (!res.isCorrect) {
-      // 1. Public room broadcast: Generic message only, ZERO role leakage
+      // 1. Public room broadcast: Generic message only, ZERO role or player leakage
       io.to(room.code).emit('game:prediction_result', {
         success: true,
         isCorrect: false,
         event: {
-          timestamp: res.event?.timestamp || Date.now(),
+          timestamp: Date.now(),
           type: 'PREDICTION_WRONG',
-          oldActivePlayerId: res.event?.oldActivePlayerId,
-          oldActivePlayerName: res.event?.oldActivePlayerName,
-          targetPlayerId: res.event?.targetPlayerId,
-          targetPlayerName: res.event?.targetPlayerName,
           message: '🔄 Card Swapping...'
         }
       });
@@ -88,11 +84,16 @@ function setupSocketHandlers(io, roomManager) {
         }
       }
     } else {
-      // Correct guess: Broadcast victory and role unlock
+      // Correct guess: Broadcast minimum required message
       io.to(room.code).emit('game:prediction_result', {
         success: true,
         isCorrect: true,
-        event: res.event
+        event: {
+          timestamp: Date.now(),
+          type: 'PREDICTION_CORRECT',
+          message: '✅ Correct Guess!',
+          isRoundFinished: !!res.event?.isRoundFinished
+        }
       });
     }
 

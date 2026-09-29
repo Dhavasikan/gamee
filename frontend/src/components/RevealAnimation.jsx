@@ -33,118 +33,59 @@ export default function RevealAnimation({ event, onComplete }) {
 
   if (!event) return null;
 
-  const {
-    predictorName,
-    targetPlayerName,
-    targetRoleName,
-    targetRoleEmoji,
-    pointsAwarded,
-    isRoundFinished
-  } = event;
-
   return (
     <div className="swap-overlay" onClick={onComplete}>
-      <div style={{ textAlign: 'center', maxWidth: '480px', width: '100%', animation: 'fadeIn 0.3s ease' }}>
+      <div style={{ textAlign: 'center', maxWidth: '440px', width: '100%', animation: 'fadeIn 0.3s ease' }}>
         <div style={{
           fontSize: '4.5rem',
-          filter: 'drop-shadow(0 0 25px rgba(255, 215, 0, 0.8))',
+          filter: 'drop-shadow(0 0 25px rgba(16, 185, 129, 0.8))',
           lineHeight: 1,
-          marginBottom: '0.5rem'
+          marginBottom: '1rem'
         }}>
-          {targetRoleEmoji}
+          ✅
         </div>
 
         <div style={{
-          background: 'rgba(16, 185, 129, 0.2)',
+          background: 'rgba(16, 185, 129, 0.25)',
           border: '1.5px solid #10b981',
           borderRadius: '999px',
-          padding: '0.4rem 1.5rem',
+          padding: '0.6rem 2rem',
           display: 'inline-flex',
           alignItems: 'center',
           gap: '0.5rem',
           color: '#6ee7b7',
           fontWeight: 'bold',
-          fontSize: '1.1rem',
-          marginBottom: '0.75rem'
+          fontSize: '1.4rem',
+          marginBottom: '1.25rem',
+          boxShadow: '0 0 25px rgba(16, 185, 129, 0.4)'
         }}>
-          🎉 CORRECT PREDICTION!
+          ✅ Correct Guess!
         </div>
 
-        <h2 className="font-serif gold-gradient-text" style={{ fontSize: '2rem', margin: '0.25rem 0' }}>
-          {targetPlayerName} is {targetRoleName}!
-        </h2>
-
-        {pointsAwarded > 0 ? (
+        {event.isRoundFinished && (
           <div style={{
-            background: 'var(--gold-gradient)',
-            color: '#1a0f00',
-            fontWeight: 800,
-            fontSize: '1.4rem',
-            padding: '0.6rem 1.5rem',
-            borderRadius: '999px',
-            display: 'inline-block',
-            margin: '0.75rem 0',
-            boxShadow: '0 0 25px rgba(255, 215, 0, 0.6)'
+            background: 'rgba(26, 17, 49, 0.85)',
+            border: '1px solid var(--border-gold)',
+            borderRadius: '1rem',
+            padding: '1rem',
+            marginTop: '0.5rem',
+            color: 'var(--gold-primary)',
+            fontWeight: 'bold',
+            fontSize: '1.1rem'
           }}>
-            +{pointsAwarded} Points to {predictorName}!
-          </div>
-        ) : (
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: 'var(--text-muted)',
-            fontWeight: 600,
-            fontSize: '1.1rem',
-            padding: '0.5rem 1.25rem',
-            borderRadius: '999px',
-            display: 'inline-block',
-            margin: '0.75rem 0'
-          }}>
-            Thirudan yields 0 Points
+            🏆 Round Complete!
           </div>
         )}
 
-        {/* Completed status indicator */}
-        <div style={{
-          background: 'rgba(16, 185, 129, 0.2)',
-          border: '1.5px solid #10b981',
-          borderRadius: '0.75rem',
-          padding: '0.5rem 1rem',
-          color: '#6ee7b7',
-          fontWeight: 'bold',
-          fontSize: '0.95rem',
-          marginBottom: '0.75rem',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.4rem'
-        }}>
-          <span>🏆 {predictorName} has COMPLETED 🔒 (Cannot be selected again)</span>
+        <div>
+          <button
+            onClick={onComplete}
+            className="btn btn-gold btn-sm"
+            style={{ marginTop: '1.5rem', padding: '0.55rem 2rem' }}
+          >
+            {event.isRoundFinished ? 'View Final Results ➔' : 'Continue Game ➔'}
+          </button>
         </div>
-
-        <div style={{
-          background: 'rgba(26, 17, 49, 0.85)',
-          border: '1px solid var(--border-gold)',
-          borderRadius: '1rem',
-          padding: '1rem',
-          marginTop: '0.5rem'
-        }}>
-          {isRoundFinished ? (
-            <div style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-              🕵️ THIEF FOUND! Round is Complete!
-            </div>
-          ) : (
-            <div style={{ color: '#cbd5e1', fontSize: '0.95rem' }}>
-              👉 Next Turn passes to <strong>{targetPlayerName} ({targetRoleName})</strong>!
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={onComplete}
-          className="btn btn-gold btn-sm"
-          style={{ marginTop: '1.5rem' }}
-        >
-          {isRoundFinished ? 'View Final Results ➔' : 'Next Turn ➔'}
-        </button>
       </div>
     </div>
   );

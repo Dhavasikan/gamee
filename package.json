@@ -8,6 +8,8 @@
     "build": "npm --prefix frontend run build",
     "start": "node backend/src/server.js",
     "test": "node backend/test/gameEngine.test.js",
+    "test:integration": "node test/integration.test.js",
+    "test:playthrough": "node test/fullGamePlaythrough.test.js",
     "dev:backend": "node backend/src/server.js",
     "dev:frontend": "npm --prefix frontend run dev"
   },

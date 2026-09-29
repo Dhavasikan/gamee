@@ -43,43 +43,35 @@ export default function SwapAnimation({ event, privateSwapInfo, currentPlayer, o
         }}
       >
         {/* ========================================================================= */}
-        {/* CASE 1: GUESSER'S SCREEN (e.g. Arun)                                      */}
+        {/* CASE 1 & 2: AFFECTED PLAYERS (Guesser & Target)                           */}
+        {/* Only see their OWN updated private role                                   */}
         {/* ========================================================================= */}
-        {isGuesser && (
+        {(isGuesser || isTarget) && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            {/* Header: ❌ Wrong Guess */}
+            {/* Header: 🔄 Card Swapped */}
             <div style={{
-              background: 'rgba(239, 68, 68, 0.22)',
-              border: '1.5px solid #ef4444',
+              background: 'rgba(255, 215, 0, 0.18)',
+              border: '1.5px solid var(--gold-primary)',
               borderRadius: '999px',
               padding: '0.5rem 1.6rem',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              marginBottom: '0.85rem',
-              color: '#fca5a5',
+              marginBottom: '1rem',
+              color: 'var(--gold-light)',
               fontWeight: 'bold',
-              fontSize: '1.15rem',
-              boxShadow: '0 0 20px rgba(239, 68, 68, 0.3)'
+              fontSize: '1.2rem',
+              boxShadow: 'var(--shadow-gold)'
             }}>
-              <span>❌ Wrong Guess</span>
+              <span>🔄 Card Swapped</span>
             </div>
-
-            {/* Subtitle: 🔄 Your card has been swapped */}
-            <h2 className="font-serif gold-gradient-text" style={{ fontSize: '1.75rem', margin: '0.35rem 0' }}>
-              🔄 Your card has been swapped
-            </h2>
-
-            <p style={{ color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Your prediction was incorrect. Your role has been privately exchanged.
-            </p>
 
             {/* Secret Swapped Card Reveal */}
             <div style={{
               background: 'linear-gradient(145deg, rgba(42, 23, 76, 0.95) 0%, rgba(18, 10, 36, 0.95) 100%)',
               border: '2px solid var(--gold-primary)',
               borderRadius: '1.25rem',
-              padding: '1.75rem 1.25rem',
+              padding: '2rem 1.25rem',
               boxShadow: 'var(--shadow-gold), 0 10px 30px rgba(0,0,0,0.6)',
               maxWidth: '340px',
               margin: '0 auto',
@@ -88,119 +80,28 @@ export default function SwapAnimation({ event, privateSwapInfo, currentPlayer, o
               <div style={{
                 fontSize: '4.5rem',
                 lineHeight: 1,
-                marginBottom: '0.65rem',
+                marginBottom: '0.85rem',
                 filter: 'drop-shadow(0 0 16px rgba(255, 215, 0, 0.5))'
               }}>
                 {privateSwapInfo.roleEmoji || '🃏'}
               </div>
 
-              {/* Requirement: 👮 Your new role: Police */}
+              {/* Requirement: Your new role: 👮 Police / 👑 Raja */}
               <div style={{
-                fontSize: '1.35rem',
+                fontSize: '1.4rem',
                 fontWeight: 800,
                 color: 'var(--gold-primary)',
                 fontFamily: 'var(--font-serif)',
-                letterSpacing: '0.5px',
-                margin: '0.5rem 0 0.25rem'
+                letterSpacing: '0.5px'
               }}>
-                {privateSwapInfo.roleEmoji} Your new role: {privateSwapInfo.roleName}
-              </div>
-
-              <div style={{
-                fontSize: '0.8rem',
-                color: 'var(--gold-light)',
-                background: 'rgba(255, 215, 0, 0.1)',
-                padding: '0.3rem 0.8rem',
-                borderRadius: '999px',
-                display: 'inline-block',
-                marginTop: '0.5rem'
-              }}>
-                🔒 Private to you and the target player
+                Your new role: {privateSwapInfo.roleEmoji} {privateSwapInfo.roleName}
               </div>
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* CASE 2: SELECTED / TARGET PLAYER'S SCREEN (e.g. Karthik)                  */}
-        {/* ========================================================================= */}
-        {isTarget && (
-          <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            {/* Header: 🔄 Your card has been swapped */}
-            <div style={{
-              background: 'rgba(255, 215, 0, 0.2)',
-              border: '1.5px solid var(--gold-primary)',
-              borderRadius: '999px',
-              padding: '0.5rem 1.6rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.85rem',
-              color: 'var(--gold-light)',
-              fontWeight: 'bold',
-              fontSize: '1.15rem',
-              boxShadow: 'var(--shadow-gold)'
-            }}>
-              <span>🔄 Your card has been swapped</span>
-            </div>
-
-            <h2 className="font-serif gold-gradient-text" style={{ fontSize: '1.75rem', margin: '0.35rem 0' }}>
-              The Seeker Made an Incorrect Guess!
-            </h2>
-
-            <p style={{ color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              You were guessed incorrectly. You have received the active role!
-            </p>
-
-            {/* Secret Swapped Card Reveal */}
-            <div style={{
-              background: 'linear-gradient(145deg, rgba(42, 23, 76, 0.95) 0%, rgba(18, 10, 36, 0.95) 100%)',
-              border: '2px solid var(--gold-primary)',
-              borderRadius: '1.25rem',
-              padding: '1.75rem 1.25rem',
-              boxShadow: 'var(--shadow-gold), 0 10px 30px rgba(0,0,0,0.6)',
-              maxWidth: '340px',
-              margin: '0 auto'
-            }}>
-              <div style={{
-                fontSize: '4.5rem',
-                lineHeight: 1,
-                marginBottom: '0.65rem',
-                filter: 'drop-shadow(0 0 16px rgba(255, 215, 0, 0.6))'
-              }}>
-                {privateSwapInfo.roleEmoji || '👑'}
-              </div>
-
-              {/* Requirement: 👑 Your new role: Raja */}
-              <div style={{
-                fontSize: '1.35rem',
-                fontWeight: 800,
-                color: 'var(--gold-primary)',
-                fontFamily: 'var(--font-serif)',
-                letterSpacing: '0.5px',
-                margin: '0.5rem 0 0.25rem'
-              }}>
-                {privateSwapInfo.roleEmoji} Your new role: {privateSwapInfo.roleName}
-              </div>
-
-              <div style={{
-                fontSize: '0.8rem',
-                color: '#86efac',
-                background: 'rgba(16, 185, 129, 0.15)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                padding: '0.3rem 0.8rem',
-                borderRadius: '999px',
-                display: 'inline-block',
-                marginTop: '0.5rem'
-              }}>
-                👉 Turn transfers to you to find the target!
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* CASE 3: OTHER PLAYERS' SCREENS (Generic only, ZERO role leakage)          */}
+        {/* CASE 3: OTHER PLAYERS' SCREENS (Generic only: "🔄 Card Swapping...")      */}
         {/* ========================================================================= */}
         {isSpectator && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -209,29 +110,21 @@ export default function SwapAnimation({ event, privateSwapInfo, currentPlayer, o
               background: 'rgba(59, 23, 100, 0.7)',
               border: '1.5px solid var(--border-gold)',
               borderRadius: '999px',
-              padding: '0.5rem 1.75rem',
+              padding: '0.6rem 2rem',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.6rem',
-              marginBottom: '1rem',
+              marginBottom: '1.25rem',
               color: 'var(--gold-primary)',
               fontWeight: 'bold',
-              fontSize: '1.25rem',
+              fontSize: '1.35rem',
               boxShadow: 'var(--shadow-gold)'
             }}>
               <span>🔄 Card Swapping...</span>
             </div>
 
-            <h2 className="font-serif gold-gradient-text" style={{ fontSize: '1.8rem', margin: '0.35rem 0' }}>
-              Secret Roles Swapping
-            </h2>
-
-            <p style={{ color: '#cbd5e1', fontSize: '0.92rem', marginBottom: '1.5rem' }}>
-              A player made an incorrect guess. The two cards are exchanging hands.
-            </p>
-
-            {/* Shimmering Mystery Cards (No roles revealed!) */}
-            <div className="swap-animation-box" style={{ margin: '1.25rem auto', maxWidth: '380px' }}>
+            {/* Shimmering Mystery Cards (No roles or player names revealed!) */}
+            <div className="swap-animation-box" style={{ margin: '1.5rem auto', maxWidth: '380px' }}>
               <div
                 className="swap-card"
                 style={{
@@ -267,19 +160,6 @@ export default function SwapAnimation({ event, privateSwapInfo, currentPlayer, o
                   🔒 Hidden
                 </div>
               </div>
-            </div>
-
-            <div style={{
-              background: 'rgba(26, 17, 49, 0.85)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
-              borderRadius: '0.85rem',
-              padding: '0.85rem 1.25rem',
-              color: 'var(--text-muted)',
-              fontSize: '0.85rem',
-              maxWidth: '380px',
-              margin: '0 auto'
-            }}>
-              🔒 Role details are strictly private to the two players involved.
             </div>
           </div>
         )}

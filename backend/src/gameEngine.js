@@ -80,20 +80,12 @@ class GameEngine {
       targetRole: 'rani',
       activePlayerId: rajaPlayerId,
       rajaRevealed: false,
-      history: [
-        {
-          timestamp: Date.now(),
-          type: 'INFO',
-          message: 'Cards dealt! The secret characters have been assigned to all players.'
-        }
-      ],
       stats: {
         totalPredictions: 0,
         correctPredictions: 0,
         wrongPredictions: 0,
         characterTransfers: 0
-      },
-      lastAction: null
+      }
     };
 
     return state;
@@ -121,17 +113,6 @@ class GameEngine {
     state.activePlayerId = player.id;
     state.currentRole = 'raja';
     state.targetRole = 'rani';
-
-    const event = {
-      timestamp: Date.now(),
-      type: 'RAJA_REVEAL',
-      playerId: player.id,
-      playerName: player.name,
-      message: `👑 ${player.name} revealed as Raja! Turn begins: Find Rani.`
-    };
-
-    state.history.push(event);
-    state.lastAction = event;
 
     return { success: true, state };
   }
@@ -199,47 +180,19 @@ class GameEngine {
       const event = {
         timestamp: Date.now(),
         type: 'PREDICTION_CORRECT',
-        predictorId: activePlayer.id,
-        predictorName: activePlayer.name,
-        targetPlayerId: targetPlayer.id,
-        targetPlayerName: targetPlayer.name,
-        targetRole: targetRoleObj.id,
-        targetRoleName: targetRoleObj.name,
-        targetRoleEmoji: targetRoleObj.emoji,
-        pointsAwarded,
-        completedPlayerId: activePlayer.id,
-        isRoundFinished,
-        message: `✅ CORRECT! ${activePlayer.name} guessed ${targetPlayer.name} is ${targetRoleObj.emoji} ${targetRoleObj.name}! ${activePlayer.name} has COMPLETED 🔒 (+${pointsAwarded} points).`
+        message: '✅ Correct Guess!',
+        isRoundFinished
       };
-
-      state.history.push(event);
-      state.lastAction = event;
 
       if (isRoundFinished || targetRoleObj.id === 'thirudan') {
         // Thief was found, round is complete!
         targetPlayer.finalRole = true;
         state.status = 'ROUND_END';
-        state.history.push({
-          timestamp: Date.now(),
-          type: 'ROUND_COMPLETE',
-          message: `🏆 Thirudan (Thief) found! Round is complete!`
-        });
       } else {
         // Move to next in sequence
         state.currentRole = guessedRole;
         state.targetRole = this.roleSequence[nextRoleIndex];
         state.activePlayerId = targetPlayer.id;
-
-        const nextTargetObj = this.rolesMap[state.targetRole];
-        state.history.push({
-          timestamp: Date.now(),
-          type: 'TURN_CHANGE',
-          activePlayerId: targetPlayer.id,
-          activePlayerName: targetPlayer.name,
-          currentRole: state.currentRole,
-          targetRole: state.targetRole,
-          message: `👉 Next Turn: ${targetPlayer.name} (${targetRoleObj.emoji} ${targetRoleObj.name}) must find ${nextTargetObj.emoji} ${nextTargetObj.name}.`
-        });
       }
 
       return {
@@ -256,7 +209,7 @@ class GameEngine {
       // activePlayer receives targetPlayer's previous role.
       // targetPlayer becomes the new active player!
       // targetRole remains UNCHANGED.
-      // VISIBILITY: Only the two involved players see new roles!
+      // VISIBILITY: Only the two involved players see their new role!
       // Other players see ONLY: "🔄 Card Swapping..."
       // ----------------------------------------------------
       state.stats.wrongPredictions += 1;
@@ -270,9 +223,7 @@ class GameEngine {
       targetPlayer.character = oldActiveCharacter;
 
       const oldActivePlayerId = activePlayer.id;
-      const oldActivePlayerName = activePlayer.name;
       const newActivePlayerId = targetPlayer.id;
-      const newActivePlayerName = targetPlayer.name;
 
       // The selected player becomes the new current role holder
       state.activePlayerId = targetPlayer.id;
@@ -287,41 +238,28 @@ class GameEngine {
       const event = {
         timestamp: Date.now(),
         type: 'PREDICTION_WRONG',
-        oldActivePlayerId: oldActivePlayerId,
-        oldActivePlayerName: oldActivePlayerName,
-        targetPlayerId: newActivePlayerId,
-        targetPlayerName: newActivePlayerName,
         message: '🔄 Card Swapping...'
       };
-
-      state.history.push(event);
-      state.lastAction = event;
 
       // Private swap details for the two involved players only
       const swapDetails = {
         guesser: {
           playerId: oldActivePlayerId,
-          playerName: oldActivePlayerName,
           isGuesser: true,
-          title: '❌ Wrong Guess',
-          subtitle: '🔄 Your card has been swapped',
-          message: '🔄 Your card has been swapped',
+          title: '🔄 Card Swapped',
           roleId: targetOldCharacter,
           roleName: this.rolesMap[targetOldCharacter].name,
           roleEmoji: this.rolesMap[targetOldCharacter].emoji,
-          roleDisplay: `${this.rolesMap[targetOldCharacter].emoji} Your new role: ${this.rolesMap[targetOldCharacter].name}`
+          roleDisplay: `Your new role: ${this.rolesMap[targetOldCharacter].emoji} ${this.rolesMap[targetOldCharacter].name}`
         },
         target: {
           playerId: newActivePlayerId,
-          playerName: newActivePlayerName,
           isGuesser: false,
-          title: '🔄 Your card has been swapped',
-          subtitle: '🔄 Your card has been swapped',
-          message: '🔄 Your card has been swapped',
+          title: '🔄 Card Swapped',
           roleId: oldActiveCharacter,
           roleName: this.rolesMap[oldActiveCharacter].name,
           roleEmoji: this.rolesMap[oldActiveCharacter].emoji,
-          roleDisplay: `${this.rolesMap[oldActiveCharacter].emoji} Your new role: ${this.rolesMap[oldActiveCharacter].name}`
+          roleDisplay: `Your new role: ${this.rolesMap[oldActiveCharacter].emoji} ${this.rolesMap[oldActiveCharacter].name}`
         }
       };
 
@@ -338,6 +276,7 @@ class GameEngine {
   /**
    * Filters the game state for public broadcast (Anti-cheating).
    * Hidden characters are replaced with null unless revealed.
+   * NEVER leaks history, previous moves, or role changes.
    */
   getPublicState(state) {
     return {
@@ -348,8 +287,6 @@ class GameEngine {
       activePlayerId: state.activePlayerId,
       rajaRevealed: state.rajaRevealed,
       stats: state.stats,
-      lastAction: state.lastAction,
-      history: state.history,
       players: state.players.map(p => ({
         id: p.id,
         name: p.name,
